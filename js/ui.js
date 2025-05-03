@@ -1,37 +1,33 @@
-import { IMAGE_BASE } from './api.js';
+import { getPosterURL } from './api.js';
 
-const moviesContainer = document.getElementById('movies');
-const modal = document.getElementById('modal');
-const modalBody = document.getElementById('modal-body');
-const modalCloseBtn = document.getElementById('modal-close');
+const $ = s => document.querySelector(s);
 
-export function renderMovies(movies = []) {
-  moviesContainer.innerHTML = movies.map(toCard).join('');
-}
+/* 카드 렌더 */
+export const renderMovies = (movies = [], bookmarks = []) => {
+  const list = $('#movieList');
+  list.innerHTML = movies
+    .map(m => {
+      const marked = bookmarks.includes(m.id);
+      return `
+      <article class="card" data-id="${m.id}">
+        <img src="${getPosterURL(m.poster_path)}" alt="${m.title}">
+        <button class="bookmark ${marked ? 'active' : ''}" aria-label="bookmark">
+          ${marked ? '★' : '☆'}
+        </button>
+        <div class="card-content">
+          <h3>${m.title}</h3>
+          <p class="rating">⭐ ${m.vote_average?.toFixed(1)}</p>
+        </div>
+      </article>`;
+    })
+    .join('');
+};
 
-export function toCard(movie) {
-  const poster = movie.poster_path ? IMAGE_BASE + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Image';
-  return /*html*/\`
-    <article class="movie-card" data-id="\${movie.id}">
-      <img src="\${poster}" alt="\${movie.title}" />
-      <div class="movie-info">
-        <h3>\${movie.title}</h3>
-        <span class="rating">★ \${movie.vote_average.toFixed(1)}</span>
-      </div>
-    </article>\`;
-}
-
-export function openModal(contentHtml) {
-  modalBody.innerHTML = contentHtml;
-  modal.classList.remove('hidden');
-}
-
-export function closeModal() {
-  modal.classList.add('hidden');
-  modalBody.innerHTML = '';
-}
-
-modalCloseBtn.addEventListener('click', closeModal);
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) closeModal();
-});
+/* 모달 */
+export const showModal = html => {
+  $('#modalBody').innerHTML = html;
+  $('#modal').classList.remove('hidden');
+};
+export const hideModal = () => $('#modal').classList.add('hidden');
+export const bindModalClose = () =>
+  $('#modalClose').addEventListener('click', hideModal);

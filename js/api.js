@@ -1,30 +1,32 @@
-import { TMDB_API_KEY } from './config.js';
-const BASE_URL = 'https://api.themoviedb.org/3';
-const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+import { TMDB_ACCESS_TOKEN } from './config.js';
 
-const defaultParams = new URLSearchParams({
-  language: 'en-US',
-  include_adult: 'false',
-  api_key: TMDB_API_KEY
-});
+const BASE = 'https://api.themoviedb.org/3';
+const IMG  = 'https://image.tmdb.org/t/p/w500';
 
-async function request(endpoint, params = {}) {
-  const url = \`\${BASE_URL}\${endpoint}?\${defaultParams}&\${new URLSearchParams(params)}\`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Network response was not ok');
+const headers = {
+  accept: 'application/json',
+  Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+};
+
+const fetchJSON = async (endpoint, params = {}) => {
+  const url = new URL(`${BASE}${endpoint}`);
+  if (Object.keys(params).length) url.search = new URLSearchParams(params);
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`TMDB ${res.status}: ${txt}`);
+  }
   return res.json();
-}
+};
 
-export async function getPopular(page = 1) {
-  return request('/movie/popular', { page });
-}
+export const searchMovies = (query, page = 1, lang = 'ko-KR') =>
+  fetchJSON('/search/movie', { query, language: lang, page });
 
-export async function searchMovies(query, page = 1) {
-  return request('/search/movie', { query, page });
-}
+export const getPopularMovies = (page = 1, lang = 'ko-KR') =>
+  fetchJSON('/movie/popular', { language: lang, page });
 
-export async function getMovieDetails(id) {
-  return request(\`/movie/\${id}\`);
-}
+export const getMovieDetails = (id, lang = 'ko-KR') =>
+  fetchJSON(`/movie/${id}`, { language: lang });
 
-export { IMAGE_BASE };
+export const getPosterURL = path =>
+  path ? `${IMG}${path}` : 'https://via.placeholder.com/500x750?text=No+Image';
