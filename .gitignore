@@ -1,0 +1,4 @@
+# Ignore API keys and environment files
+js/config.js
+.env
+node_modules
